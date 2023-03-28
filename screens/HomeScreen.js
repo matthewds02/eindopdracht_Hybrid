@@ -72,7 +72,7 @@ const HomeScreen = () => {
 
   const renderRecipe = ({ item }) => {
     const isFav = item.favorite;
-
+    console.log(updateRecipe);
     return (
       <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe, deleteRecipe: deleteRecipe  })}>
         <Text style={styles.recipeName}>{item.name}</Text>

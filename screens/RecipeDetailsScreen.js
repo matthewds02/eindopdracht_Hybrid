@@ -46,10 +46,12 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
-    width: '100%',
-    height: 200,
+    width: '76%',
+    height: '100%',
     marginBottom: 16,
   },
   name: {
