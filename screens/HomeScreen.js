@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, Modal, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Importeer AsyncStorage
 import { useIsFocused } from '@react-navigation/native';
-import DeleteRecipeModal from '../components/DeleteRecipeModal';
 
 const HomeScreen = () => {
   const [recipes, setRecipes] = useState([]);
   const isFocused = useIsFocused(); // Voeg de useIsFocused hook toe
-  const [deleteRecipeModalVisible, setDeleteRecipeModalVisible] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     // Haal recepten op uit AsyncStorage
@@ -31,24 +30,6 @@ const HomeScreen = () => {
     }
   }, [isFocused]);
 
-  const handleLongPress = (item) => {
-    setRecipeToDelete(item);
-    setDeleteRecipeModalVisible(true);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteRecipeModalVisible(false);
-    setRecipeToDelete(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    const newRecipes = recipes.filter((recipe) => recipe.id !== recipeToDelete.id);
-    setRecipes(newRecipes);
-    saveRecipes(newRecipes);
-    setDeleteRecipeModalVisible(false);
-    setRecipeToDelete(null);
-  };
-
   // Functie om de recipes array op te slaan in AsyncStorage
   const saveRecipes = async (recipesToSave) => {
     try {
@@ -57,8 +38,6 @@ const HomeScreen = () => {
       console.log(error);
     }
   };
-
-  const navigation = useNavigation();
 
   const toggleFavorite = (itemId) => {
     const newRecipes = recipes.map(recipe => {
@@ -84,11 +63,18 @@ const HomeScreen = () => {
     saveRecipes(updatedRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
   };
 
+  const deleteRecipe = (recipeToDeleteName) => {
+    const updatedRecipes = recipes.filter(recipe => recipe.name !== recipeToDeleteName);
+    setRecipes(updatedRecipes);
+    saveRecipes(updatedRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
+  };
+
+
   const renderRecipe = ({ item }) => {
     const isFav = item.favorite;
 
     return (
-      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe })} onLongPress={() => handleLongPress(item)}>
+      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe, deleteRecipe: deleteRecipe  })}>
         <Text style={styles.recipeName}>{item.name}</Text>
         <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
           <FontAwesome name={isFav ? 'heart' : 'heart-o'} size={24} color={isFav ? 'red' : 'black'} />

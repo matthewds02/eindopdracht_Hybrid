@@ -13,7 +13,7 @@ const RecipeDetailsScreen = ({ route, navigation }) => {
   };
 
   const handleDelete = () => {
-    deleteRecipe(recipe.id);
+    deleteRecipe(recipe.name);
     navigation.goBack();
   };
 
