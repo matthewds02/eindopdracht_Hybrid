@@ -1,20 +1,34 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import HomeScreen from './screens/HomeScreen';
+import AddRecipeScreen from './screens/AddRecipeScreen';
+import RecipeDetailsScreen from './screens/RecipeDetailsScreen';
+import FavoriteRecipeScreen from './screens/FavoriteRecipeScreen';
 
-export default function App() {
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+const HomeStack = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator>
+      <Stack.Screen name="All Recipes" component={HomeScreen}/>
+      <Stack.Screen name="Recipe Details" component={RecipeDetailsScreen} />
+    </Stack.Navigator>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const App = () => {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Home" component={HomeStack} options={{ headerTitleAlign: 'center', headerTitleStyle: { fontSize: 30} }} />
+        <Tab.Screen name="Favorite" component={FavoriteRecipeScreen} options={{ headerTitleAlign: 'center', headerTitleStyle: { fontSize: 30} }} />
+        <Tab.Screen name="Add Recipe" component={AddRecipeScreen} options={{ headerTitleAlign: 'center', headerTitleStyle: { fontSize: 30} }} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+};
+
+export default App;
