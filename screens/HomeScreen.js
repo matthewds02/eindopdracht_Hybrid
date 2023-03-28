@@ -39,9 +39,9 @@ const HomeScreen = () => {
     }
   };
 
-  const toggleFavorite = (itemId) => {
+  const toggleFavorite = (itemName) => {
     const newRecipes = recipes.map(recipe => {
-      if (recipe.id === itemId) {
+      if (recipe.name === itemName) {
         return { ...recipe, favorite: !recipe.favorite };
       } else {
         return recipe;
@@ -53,7 +53,7 @@ const HomeScreen = () => {
 
   const updateRecipe = (updatedRecipe) => {
     const updatedRecipes = recipes.map(recipe => {
-      if (recipe.id === updatedRecipe.id) {
+      if (recipe.name === updatedRecipe.name) {
         return updatedRecipe;
       } else {
         return recipe;
@@ -72,11 +72,11 @@ const HomeScreen = () => {
 
   const renderRecipe = ({ item }) => {
     const isFav = item.favorite;
-    console.log(updateRecipe);
+    console.log(item);
     return (
       <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe, deleteRecipe: deleteRecipe  })}>
         <Text style={styles.recipeName}>{item.name}</Text>
-        <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+        <TouchableOpacity onPress={() => toggleFavorite(item.name)}>
           <FontAwesome name={isFav ? 'heart' : 'heart-o'} size={24} color={isFav ? 'red' : 'black'} />
         </TouchableOpacity>
       </TouchableOpacity>
