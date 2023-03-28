@@ -12,6 +12,8 @@ const RecipeDetailsScreen = ({ route }) => {
     route.params.updateRecipe(updatedRecipe);
   };
 
+//<Text style={styles.ingredients}>{recipe.ingredients.join(', ')}</Text>
+
   return (
     <View style={styles.container}>
       <Text style={styles.name}>{recipe.name}</Text>
@@ -20,7 +22,7 @@ const RecipeDetailsScreen = ({ route }) => {
       </TouchableOpacity>
       <Text style={styles.category}>{recipe.category}</Text>
       <Text style={styles.description}>{recipe.description}</Text>
-      <Text style={styles.ingredients}>{recipe.ingredients.join(', ')}</Text>
+      <Text style={styles.ingredients}>{recipe.ingredients}</Text>
       <Text style={styles.instructions}>{recipe.instructions}</Text>
     </View>
   );
