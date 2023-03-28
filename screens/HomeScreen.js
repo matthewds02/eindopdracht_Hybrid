@@ -2,18 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Importeer AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
-import DeleteRecipeModal from '../components/DeleteRecipeModal';
 
 const HomeScreen = () => {
   const [recipes, setRecipes] = useState([]);
-  const isFocused = useIsFocused(); // Voeg de useIsFocused hook toe
-  const [deleteRecipeModalVisible, setDeleteRecipeModalVisible] = useState(false);
-  const [recipeToDelete, setRecipeToDelete] = useState(null);
+  const isFocused = useIsFocused();
+  const navigation = useNavigation();
 
   useEffect(() => {
-    // Haal recepten op uit AsyncStorage
     async function getRecipes() {
       try {
         const jsonRecipes = await AsyncStorage.getItem('recipes');
@@ -25,40 +22,10 @@ const HomeScreen = () => {
       }
     }
 
-    // Roep de getRecipes functie aan telkens wanneer het startscherm opnieuw gerenderd wordt
     if (isFocused) {
       getRecipes();
     }
   }, [isFocused]);
-
-  const handleLongPress = (item) => {
-    setRecipeToDelete(item);
-    setDeleteRecipeModalVisible(true);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteRecipeModalVisible(false);
-    setRecipeToDelete(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    const newRecipes = recipes.filter((recipe) => recipe.id !== recipeToDelete.id);
-    setRecipes(newRecipes);
-    saveRecipes(newRecipes);
-    setDeleteRecipeModalVisible(false);
-    setRecipeToDelete(null);
-  };
-
-  // Functie om de recipes array op te slaan in AsyncStorage
-  const saveRecipes = async (recipesToSave) => {
-    try {
-      await AsyncStorage.setItem('recipes', JSON.stringify(recipesToSave));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const navigation = useNavigation();
 
   const toggleFavorite = (itemId) => {
     const newRecipes = recipes.map(recipe => {
@@ -69,7 +36,7 @@ const HomeScreen = () => {
       }
     });
     setRecipes(newRecipes);
-    saveRecipes(newRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
+    saveRecipes(newRecipes);
   };
 
   const updateRecipe = (updatedRecipe) => {
@@ -81,14 +48,19 @@ const HomeScreen = () => {
       }
     });
     setRecipes(updatedRecipes);
-    saveRecipes(updatedRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
+    saveRecipes(updatedRecipes);
+  };
+
+  const deleteRecipe = (recipeId) => {
+    const updatedRecipes = recipes.filter((recipe) => recipe.id !== recipeId);
+    setRecipes(updatedRecipes);
   };
 
   const renderRecipe = ({ item }) => {
     const isFav = item.favorite;
 
     return (
-      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe })} onLongPress={() => handleLongPress(item)}>
+      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe, deleteRecipe: deleteRecipe })}>
         <Text style={styles.recipeName}>{item.name}</Text>
         <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
           <FontAwesome name={isFav ? 'heart' : 'heart-o'} size={24} color={isFav ? 'red' : 'black'} />
@@ -97,7 +69,13 @@ const HomeScreen = () => {
     );
   };
 
-
+  const saveRecipes = async (recipesToSave) => {
+    try {
+      await AsyncStorage.setItem('recipes', JSON.stringify(recipesToSave));
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -128,8 +106,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 8,
     padding: 16,
-    flexDirection: 'row', // Om de items naast elkaar te plaatsen
-    justifyContent: 'space-between', // Om de naam en het hartje aan de uiteinden van de rij te plaatsen
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: 300,
   },
   recipeName: {
