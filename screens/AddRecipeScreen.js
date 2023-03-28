@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, Button } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, Button, Image, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 const AddRecipeScreen = () => {
   const [recipeName, setRecipeName] = useState('');
@@ -9,26 +10,54 @@ const AddRecipeScreen = () => {
   const [recipeIngredients, setRecipeIngredients] = useState('');
   const [recipeInstructions, setRecipeInstructions] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [image, setImage] = useState(null);
 
   const navigation = useNavigation();
 
   const handleSaveRecipe = async () => {
     try {
       const recipe = {
+        id: Date.now().toString(),
         name: recipeName,
         description: recipeDescription,
         ingredients: recipeIngredients,
         instructions: recipeInstructions,
-        favorite: isFavorite
+        favorite: isFavorite,
+        thumbnail: image // uri van de afbeelding
       };
       const storedRecipes = await AsyncStorage.getItem('recipes');
       const parsedRecipes = storedRecipes ? JSON.parse(storedRecipes) : [];
-      const updatedRecipes = [...parsedRecipes, recipe];
+      if (!storedRecipes) {
+        // If there are no recipes stored, create an empty array
+        await AsyncStorage.setItem('recipes', JSON.stringify([]));
+        return;
+      }
+      const updatedRecipes = parsedRecipes.map(r => {
+        if (r.id === recipe.id) {
+          return recipe;
+        }
+        return r;
+      });
       await AsyncStorage.setItem('recipes', JSON.stringify(updatedRecipes));
-      console.log(`Recipe saved: ${recipeName}`);
       navigation.goBack();
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      setImage(result.assets[0].uri);
     }
   };
 
@@ -46,9 +75,9 @@ const AddRecipeScreen = () => {
       <Text style={styles.label}>Instructions:</Text>
       <TextInput style={styles.input} value={recipeInstructions} onChangeText={setRecipeInstructions} />
 
-      <View style={styles.checkboxContainer}>
-        <Text style={styles.label}>Favorite:</Text>
-        <Button title={isFavorite ? 'Unfavorite' : 'Favorite'} onPress={() => setIsFavorite(!isFavorite)} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Button title="Pick an image from camera roll" onPress={pickImage} />
+        {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
       </View>
 
       <Button title="Save Recipe" onPress={handleSaveRecipe} />

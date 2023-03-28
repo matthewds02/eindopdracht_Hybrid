@@ -20,6 +20,7 @@ const HomeScreen = () => {
       } catch (error) {
         console.log(error);
       }
+      console.log(recipes);
     }
 
     if (isFocused) {
@@ -40,20 +41,20 @@ const HomeScreen = () => {
   };
 
   const updateRecipe = (updatedRecipe) => {
-    const updatedRecipes = recipes.map(recipe => {
-      if (recipe.id === updatedRecipe.id) {
+    const updatedRecipes = recipes.map((r) => {
+      if (r.id === updatedRecipe.id) {
         return updatedRecipe;
-      } else {
-        return recipe;
       }
+      return r;
     });
     setRecipes(updatedRecipes);
-    saveRecipes(updatedRecipes);
   };
+
 
   const deleteRecipe = (recipeId) => {
     const updatedRecipes = recipes.filter((recipe) => recipe.id !== recipeId);
     setRecipes(updatedRecipes);
+    saveRecipes(updatedRecipes);
   };
 
   const renderRecipe = ({ item }) => {
