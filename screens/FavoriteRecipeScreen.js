@@ -1,52 +1,100 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, FlatList, TouchableOpacity, Modal, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importeer AsyncStorage
+import { useIsFocused } from '@react-navigation/native';
 
 const FavoriteRecipeScreen = () => {
+  const [recipes, setRecipes] = useState([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+  const isFocused = useIsFocused(); // Voeg de useIsFocused hook toe
+  const [recipeToDelete, setRecipeToDelete] = useState(null);
+    const navigation = useNavigation();
 
   useEffect(() => {
-    // Fetch favorite recipes from API or local storage and update state
-    const fetchedFavoriteRecipes = [
-      { id: 2, name: 'Spaghetti Bolognese', favorite: true, category: 'Pasta', description: 'Classic Italian pasta dish', ingredients: ['spaghetti', 'ground beef', 'onion', 'garlic', 'tomato sauce'], instructions: '1. Cook spaghetti according to package instructions. 2. Brown ground beef with onion and garlic. 3. Add tomato sauce and simmer. 4. Serve over spaghetti.' },
-      { id: 3, name: 'Chicken Curry', favorite: true, category: 'Indian', description: 'Spicy chicken dish with rice', ingredients: ['chicken', 'onion', 'garlic', 'curry powder', 'coconut milk', 'rice'], instructions: '1. Cook rice according to package instructions. 2. Brown chicken with onion and garlic. 3. Add curry powder and coconut milk and simmer. 4. Serve over rice.' },
-    ].filter(recipe => recipe.favorite);
-    setFavoriteRecipes(fetchedFavoriteRecipes);
-  }, []);
+    // Haal recepten op uit AsyncStorage
+    async function getRecipes() {
+      try {
+        const jsonRecipes = await AsyncStorage.getItem('recipes');
+        if (jsonRecipes != null) {
+          const recipesData = JSON.parse(jsonRecipes);
+          setRecipes(recipesData);
+          setFavoriteRecipes(recipesData.filter(recipe => recipe.favorite));
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
-  const navigation = useNavigation();
+    // Roep de getRecipes functie aan telkens wanneer het startscherm opnieuw gerenderd wordt
+    if (isFocused) {
+      getRecipes();
+    }
+  }, [isFocused]);
 
-  const toggleFavorite = (itemId) => {
-    const newFavoriteRecipes = favoriteRecipes.map(recipe => {
-      if (recipe.id === itemId) {
+  // Functie om de recipes array op te slaan in AsyncStorage
+  const saveRecipes = async (recipesToSave) => {
+    try {
+      await AsyncStorage.setItem('recipes', JSON.stringify(recipesToSave));
+      setFavoriteRecipes(recipesToSave.filter(recipe => recipe.favorite));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const toggleFavorite = (itemName) => {
+    const newRecipes = recipes.map(recipe => {
+      if (recipe.name === itemName) {
         return { ...recipe, favorite: !recipe.favorite };
       } else {
         return recipe;
       }
     });
-    setFavoriteRecipes(newFavoriteRecipes);
+    setRecipes(newRecipes);
+    saveRecipes(newRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
   };
+
+  const updateRecipe = (updatedRecipe) => {
+    const updatedRecipes = recipes.map(recipe => {
+      if (recipe.name === updatedRecipe.name) {
+        return updatedRecipe;
+      } else {
+        return recipe;
+      }
+    });
+    setRecipes(updatedRecipes);
+    saveRecipes(updatedRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
+  };
+
+  const deleteRecipe = (recipeToDeleteName) => {
+    const updatedRecipes = recipes.filter(recipe => recipe.name !== recipeToDeleteName);
+    setRecipes(updatedRecipes);
+    saveRecipes(updatedRecipes); // Roep de saveRecipes functie aan om de updates op te slaan
+  };
+
 
   const renderRecipe = ({ item }) => {
     const isFav = item.favorite;
-
+    console.log(item);
     return (
-      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: toggleFavorite })}>
+      <TouchableOpacity style={styles.recipeItem} onPress={() => navigation.navigate('Recipe Details', { recipe: item, updateRecipe: updateRecipe, deleteRecipe: deleteRecipe  })}>
         <Text style={styles.recipeName}>{item.name}</Text>
-        <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
+        <TouchableOpacity onPress={() => toggleFavorite(item.name)}>
           <FontAwesome name={isFav ? 'heart' : 'heart-o'} size={24} color={isFav ? 'red' : 'black'} />
         </TouchableOpacity>
       </TouchableOpacity>
     );
   };
 
+
+
   return (
     <View style={styles.container}>
       <FlatList
         data={favoriteRecipes}
         renderItem={renderRecipe}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.recipeList}
       />
     </View>
@@ -62,15 +110,17 @@ const styles = StyleSheet.create({
   recipeList: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    alignItems: 'center',
+    width: '75%',
   },
   recipeItem: {
-    flexDirection: 'row', // Add this to align name and heart side by side
-    justifyContent: 'space-between', // Add this to separate name and heart
-    alignItems: 'center', // Add this to vertically center the items
     backgroundColor: '#fff',
     borderRadius: 4,
     marginBottom: 8,
     padding: 16,
+    flexDirection: 'row', // Om de items naast elkaar te plaatsen
+    justifyContent: 'space-between', // Om de naam en het hartje aan de uiteinden van de rij te plaatsen
+    width: 300,
   },
   recipeName: {
     fontSize: 18,

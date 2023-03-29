@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Image, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, Button, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,28 +17,18 @@ const AddRecipeScreen = () => {
   const handleSaveRecipe = async () => {
     try {
       const recipe = {
-        id: Date.now().toString(),
         name: recipeName,
         description: recipeDescription,
         ingredients: recipeIngredients,
         instructions: recipeInstructions,
         favorite: isFavorite,
-        thumbnail: image // uri van de afbeelding
+        thumbnail: image, // uri van de afbeelding
       };
       const storedRecipes = await AsyncStorage.getItem('recipes');
       const parsedRecipes = storedRecipes ? JSON.parse(storedRecipes) : [];
-      if (!storedRecipes) {
-        // If there are no recipes stored, create an empty array
-        await AsyncStorage.setItem('recipes', JSON.stringify([]));
-        return;
-      }
-      const updatedRecipes = parsedRecipes.map(r => {
-        if (r.id === recipe.id) {
-          return recipe;
-        }
-        return r;
-      });
+      const updatedRecipes = [...parsedRecipes, recipe];
       await AsyncStorage.setItem('recipes', JSON.stringify(updatedRecipes));
+      console.log(`Recipe saved: ${recipeName}`);
       navigation.goBack();
     } catch (error) {
       console.log(error);
@@ -53,8 +43,6 @@ const AddRecipeScreen = () => {
       aspect: [4, 3],
       quality: 1,
     });
-
-    console.log(result);
 
     if (!result.cancelled) {
       setImage(result.assets[0].uri);
